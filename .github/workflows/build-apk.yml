@@ -33,8 +33,83 @@ jobs:
             chmod +x gradlew
           fi
 
+      - name: Ensure google-services.json exists
+        run: |
+          if [ ! -f app/google-services.json ]; then
+            echo "Generating fallback google-services.json for CI..."
+            cat << 'EOF' > app/google-services.json
+          {
+            "project_info": {
+              "project_number": "421596270212",
+              "project_id": "od-status-saver",
+              "storage_bucket": "od-status-saver.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:421596270212:android:6e4b8595a86a60db2fa15c",
+                  "android_client_info": {
+                    "package_name": "com.odstatussaver.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyD-sampleFirebaseApiKeyForConfig"
+                  }
+                ],
+                "services": {
+                  "analytics_service": {
+                    "status": 1
+                  },
+                  "appinvite_service": {
+                    "status": 1,
+                    "other_platform_oauth_client": []
+                  },
+                  "ads_service": {
+                    "status": 1
+                  }
+                }
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:421596270212:android:6e4b8595a86a60db2fa15d",
+                  "android_client_info": {
+                    "package_name": "com.odstatussaver.app.debug"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyD-sampleFirebaseApiKeyForConfig"
+                  }
+                ],
+                "services": {
+                  "analytics_service": {
+                    "status": 1
+                  },
+                  "appinvite_service": {
+                    "status": 1,
+                    "other_platform_oauth_client": []
+                  },
+                  "ads_service": {
+                    "status": 1
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+          fi
+
       - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace --no-daemon
+        run: |
+          if [ -f gradlew ]; then
+            ./gradlew assembleDebug --stacktrace --no-daemon
+          else
+            gradle assembleDebug --stacktrace --no-daemon
+          fi
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
