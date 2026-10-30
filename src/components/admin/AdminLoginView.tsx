@@ -1,0 +1,175 @@
+import React from 'react';
+import { 
+  ShieldCheck, 
+  Lock, 
+  KeyRound, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Layers, 
+  Users, 
+  ShieldAlert,
+  Server
+} from 'lucide-react';
+import { useAdminAuth } from '../../context/AdminAuthContext';
+import { OWNER_BOOTSTRAP_EMAIL } from '../../services/firebase';
+import firebaseConfig from '../../../firebase-applet-config.json';
+
+export const AdminLoginView: React.FC = () => {
+  const { 
+    signInWithGoogle, 
+    loginAsSimulatedAdmin, 
+    loading, 
+    error 
+  } = useAdminAuth();
+
+  return (
+    <div className="max-w-2xl mx-auto my-8 space-y-6">
+      {/* Security Gateway Card */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        {/* Glow accent */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex items-center gap-3 text-emerald-400 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <Lock className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+              Restricted Area • Zero Public Access
+            </span>
+            <h2 className="text-2xl font-black text-white tracking-tight">
+              OD Status Saver Admin Console
+            </h2>
+          </div>
+        </div>
+
+        <p className="text-sm text-slate-300 leading-relaxed mb-6">
+          This administration dashboard is restricted to authorized operations personnel. 
+          Public self-registration is permanently disabled. Access is enforced by Firestore server security rules based on zero-trust attribute verification.
+        </p>
+
+        {error && (
+          <div className="mb-6 p-4 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-rose-300">Access Denied or Authorization Error</p>
+              <p className="mt-0.5 text-rose-300/80">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Primary Google Auth */}
+        <div className="space-y-4">
+          <button
+            onClick={() => signInWithGoogle()}
+            disabled={loading}
+            className="w-full py-3.5 px-6 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-sm flex items-center justify-center gap-3 transition shadow-lg shadow-white/10 disabled:opacity-60 cursor-pointer"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              />
+            </svg>
+            <span>{loading ? 'Authenticating...' : 'Sign in with Authorized Google Account'}</span>
+          </button>
+        </div>
+
+        {/* Verification Architecture Badges */}
+        <div className="mt-8 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-start gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-200">Pre-Seeded Owner Account</p>
+              <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                {OWNER_BOOTSTRAP_EMAIL}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-start gap-2.5">
+            <Server className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-200">Target Database</p>
+              <p className="text-[11px] text-slate-400 mt-0.5 font-mono truncate max-w-[200px]">
+                {firebaseConfig.projectId}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Developer Environment & RBAC Persona Switcher (For local preview verification) */}
+      <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-2">
+          <KeyRound className="w-4 h-4 text-teal-400" />
+          <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300 font-mono">
+            Environment RBAC Simulation Sandbox
+          </h3>
+        </div>
+        <p className="text-xs text-slate-400 mb-4">
+          Test and verify the 3 distinct permission tiers without requiring 3 separate external Google logins in this preview session:
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <button
+            onClick={() => loginAsSimulatedAdmin('owner', OWNER_BOOTSTRAP_EMAIL)}
+            className="p-3 rounded-xl bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/40 text-left transition cursor-pointer"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-bold text-xs text-purple-300">Owner</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200">
+                Full Root
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Manage team, edit ad rules, maintenance, wipe data.
+            </p>
+          </button>
+
+          <button
+            onClick={() => loginAsSimulatedAdmin('administrator', 'ops-lead@odstatussaver.internal')}
+            className="p-3 rounded-xl bg-blue-950/40 hover:bg-blue-900/50 border border-blue-500/40 text-left transition cursor-pointer"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-bold text-xs text-blue-300">Administrator</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-200">
+                Ops Admin
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Configure remote messages, ad frequencies, resolve crashes.
+            </p>
+          </button>
+
+          <button
+            onClick={() => loginAsSimulatedAdmin('analyst', 'analyst@odstatussaver.internal')}
+            className="p-3 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/40 text-left transition cursor-pointer"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-bold text-xs text-emerald-300">Analyst</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
+                Read-Only
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Inspect DAU, usage metrics, ad performance, export CSV.
+            </p>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,136 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net - Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedOwner() {
+      return isEmailVerified() && request.auth.token.email == 'Olandvick@gmail.com';
+    }
+
+    function isAdminRecordExists(uid) {
+      return exists(/databases/$(database)/documents/admins/$(uid));
+    }
+
+    function getAdminRecord(uid) {
+      return get(/databases/$(database)/documents/admins/$(uid)).data;
+    }
+
+    function isOwner() {
+      return isBootstrappedOwner() || (
+        isSignedIn() &&
+        isAdminRecordExists(request.auth.uid) &&
+        getAdminRecord(request.auth.uid).role == 'owner'
+      );
+    }
+
+    function isAdmin() {
+      return isOwner() || (
+        isSignedIn() &&
+        isAdminRecordExists(request.auth.uid) &&
+        getAdminRecord(request.auth.uid).role == 'administrator'
+      );
+    }
+
+    function isAnalyst() {
+      return isAdmin() || (
+        isSignedIn() &&
+        isAdminRecordExists(request.auth.uid) &&
+        getAdminRecord(request.auth.uid).role == 'analyst'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Admins Collection: Controls access to the dashboard
+    match /admins/{adminId} {
+      // Any authenticated user can read their own admin doc, or any analyst/admin/owner can view the team list
+      allow get: if isSignedIn() && (request.auth.uid == adminId || isAnalyst());
+      allow list: if isAnalyst();
+
+      // Bootstrapped owner can create their own initial document
+      allow create: if isValidId(adminId) && (
+        (isBootstrappedOwner() && request.auth.uid == adminId && request.resource.data.role == 'owner') ||
+        (isOwner() && request.resource.data.role in ['owner', 'administrator', 'analyst']) ||
+        (isAdmin() && request.resource.data.role in ['administrator', 'analyst'])
+      ) && request.resource.data.email is string && request.resource.data.email.size() <= 256;
+
+      allow update: if isValidId(adminId) && (
+        isOwner() ||
+        (isAdmin() && resource.data.role != 'owner' && request.resource.data.role in ['administrator', 'analyst'])
+      );
+
+      // Only owner can delete admin documents (cannot delete self)
+      allow delete: if isValidId(adminId) && isOwner() && request.auth.uid != adminId;
+    }
+
+    // App Configuration: Announcements, Maintenance mode, Feature flags, Ad settings
+    match /app_config/{configId} {
+      // Mobile app clients can read config (without login, since mobile users have no accounts)
+      allow get: if isValidId(configId);
+      allow list: if isAnalyst();
+
+      // Only Owner and Administrators can update or create configuration
+      allow create, update: if isValidId(configId) && isAdmin() &&
+        request.resource.data.maintenanceMode is bool &&
+        request.resource.data.announcementActive is bool &&
+        request.resource.data.adBannerEnabled is bool;
+
+      allow delete: if isValidId(configId) && isOwner();
+    }
+
+    // Audit Logs: Immutable log of administrative actions
+    match /audit_logs/{logId} {
+      allow get, list: if isAnalyst();
+
+      // Any authenticated admin/analyst performing an action can append a log entry
+      allow create: if isValidId(logId) && isAnalyst() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() <= 64 &&
+        request.resource.data.details is string &&
+        request.resource.data.details.size() <= 1000;
+
+      // Audit logs are strictly immutable: no updates or deletions allowed
+      allow update, delete: if false;
+    }
+
+    // Daily Analytics Aggregates: Zero-PII aggregates (DAU, saves, WhatsApp selections)
+    match /analytics_aggregates/{dateId} {
+      allow get, list: if isAnalyst();
+      allow create, update: if isValidId(dateId) && isAdmin() &&
+        request.resource.data.date is string &&
+        request.resource.data.dau is number;
+      allow delete: if isValidId(dateId) && isOwner();
+    }
+
+    // Crash Reports: Sanitized crash summaries
+    match /crash_reports/{reportId} {
+      allow get, list: if isAnalyst();
+      allow create, update: if isValidId(reportId) && isAdmin();
+      allow delete: if isValidId(reportId) && isOwner();
+    }
+
+    // AdMob Reports: Performance metrics & estimated earnings
+    match /admob_reports/{reportId} {
+      allow get, list: if isAnalyst();
+      allow create, update: if isValidId(reportId) && isAdmin();
+      allow delete: if isValidId(reportId) && isOwner();
+    }
+  }
+}

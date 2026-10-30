@@ -1,0 +1,8 @@
+{
+  "name": "OD Status Saver",
+  "description": "Production-quality Kotlin Android app using Jetpack Compose and Material 3 for WhatsApp and WhatsApp Business status saving, with a web admin console.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

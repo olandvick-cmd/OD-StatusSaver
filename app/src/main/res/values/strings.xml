@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">OD Status Saver</string>
+    <string name="tab_whatsapp">WhatsApp</string>
+    <string name="tab_whatsapp_business">WA Business</string>
+    <string name="tab_saved">Saved</string>
+    
+    <string name="permission_title">Folder Permission Required</string>
+    <string name="permission_description">To view and save WhatsApp statuses on Android 11 and above, please grant read access to the WhatsApp status folder using the system file picker.</string>
+    <string name="grant_permission_button">Grant Folder Access</string>
+    <string name="use_this_folder_step">Tap \"Use this folder\" at the bottom of the screen, then tap \"Allow\".</string>
+    
+    <string name="empty_statuses">No statuses found. Open WhatsApp and view some statuses first!</string>
+    <string name="empty_saved">No saved statuses yet. Tap the download icon on any status to save it permanently.</string>
+    <string name="not_installed_whatsapp">WhatsApp is not installed on this device.</string>
+    <string name="not_installed_business">WhatsApp Business is not installed on this device.</string>
+    
+    <string name="status_saved_success">Saved to gallery successfully!</string>
+    <string name="status_save_failed">Failed to save status. Please try again.</string>
+    <string name="status_delete_success">Media deleted from gallery.</string>
+    <string name="share_status">Share Status</string>
+    <string name="repost_status">Repost to WhatsApp</string>
+</resources>

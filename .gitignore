@@ -1,0 +1,26 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Android Gradle & Build Artifacts
+.gradle/
+app/build/
+*.iml
+.idea/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.hprof
+
+# Security: Android Keystores & Signing Secrets (NEVER commit to VCS)
+keystore.properties
+*.jks
+*.keystore
+release-key.properties
+

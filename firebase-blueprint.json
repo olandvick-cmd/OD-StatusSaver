@@ -1,0 +1,273 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin User",
+      "description": "Administrator account with role-based access to the dashboard",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Admin email address"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "administrator", "analyst"],
+          "description": "Access level role"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Optional display name"
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "ISO timestamp when admin was added"
+        },
+        "addedBy": {
+          "type": "string",
+          "description": "UID or email of the inviter"
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "AppConfig": {
+      "title": "App Configuration",
+      "description": "Remote configuration, announcements, and ad rules for the mobile app",
+      "type": "object",
+      "properties": {
+        "maintenanceMode": {
+          "type": "boolean",
+          "description": "Whether maintenance mode is active"
+        },
+        "maintenanceMessage": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "User-facing message during maintenance"
+        },
+        "announcementActive": {
+          "type": "boolean",
+          "description": "Whether in-app announcement banner is active"
+        },
+        "announcementTitle": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Title of the announcement"
+        },
+        "announcementBody": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Content of the announcement"
+        },
+        "adBannerEnabled": {
+          "type": "boolean",
+          "description": "Enable banner ads"
+        },
+        "adInterstitialFrequency": {
+          "type": "number",
+          "description": "Number of operations between interstitials"
+        },
+        "adCooldownMinutes": {
+          "type": "number",
+          "description": "Minimum cooldown minutes between interstitials"
+        },
+        "rewardedAdEnabled": {
+          "type": "boolean",
+          "description": "Enable optional rewarded ad placement"
+        },
+        "minAppVersion": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Minimum supported app version"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of last configuration update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "Email or UID of updating admin"
+        }
+      },
+      "required": ["maintenanceMode", "announcementActive", "adBannerEnabled"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "Immutable log of privileged configuration and administrative modifications",
+      "type": "object",
+      "properties": {
+        "actorUid": {
+          "type": "string",
+          "description": "UID of the user making the change"
+        },
+        "actorEmail": {
+          "type": "string",
+          "description": "Email of the actor"
+        },
+        "action": {
+          "type": "string",
+          "description": "Action performed (e.g., UPDATE_CONFIG, INVITE_ADMIN)"
+        },
+        "details": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Summary of parameters or diff"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of the event"
+        }
+      },
+      "required": ["actorUid", "actorEmail", "action", "details", "timestamp"]
+    },
+    "AnalyticsAggregate": {
+      "title": "Daily Analytics Aggregate",
+      "description": "Aggregated app usage statistics with zero user PII",
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "Date format YYYY-MM-DD"
+        },
+        "dau": {
+          "type": "number",
+          "description": "Daily active users"
+        },
+        "mau": {
+          "type": "number",
+          "description": "Monthly active users estimate"
+        },
+        "newUsers": {
+          "type": "number",
+          "description": "New app installs / first opens"
+        },
+        "sessions": {
+          "type": "number",
+          "description": "Total user sessions"
+        },
+        "avgEngagementSeconds": {
+          "type": "number",
+          "description": "Average engagement time in seconds"
+        },
+        "whatsappSelected": {
+          "type": "number",
+          "description": "Standard WhatsApp source selection count"
+        },
+        "whatsappBusinessSelected": {
+          "type": "number",
+          "description": "WhatsApp Business source selection count"
+        },
+        "previewsCount": {
+          "type": "number",
+          "description": "Total media previews"
+        },
+        "saveSuccess": {
+          "type": "number",
+          "description": "Successful save count"
+        },
+        "saveErrors": {
+          "type": "number",
+          "description": "Save failure count"
+        }
+      },
+      "required": ["date", "dau", "whatsappSelected", "whatsappBusinessSelected"]
+    },
+    "CrashReport": {
+      "title": "Crash & Issue Summary",
+      "description": "Sanitized technical crash summaries without sensitive filepaths or private info",
+      "type": "object",
+      "properties": {
+        "appVersion": {
+          "type": "string",
+          "description": "App build version"
+        },
+        "androidVersion": {
+          "type": "string",
+          "description": "Android OS version / API level"
+        },
+        "deviceModel": {
+          "type": "string",
+          "description": "Device hardware model"
+        },
+        "exceptionType": {
+          "type": "string",
+          "description": "Exception class name"
+        },
+        "message": {
+          "type": "string",
+          "description": "Sanitized error message"
+        },
+        "occurrences": {
+          "type": "number",
+          "description": "Count of times observed"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "investigating", "resolved"],
+          "description": "Triage status"
+        },
+        "lastSeen": {
+          "type": "string",
+          "description": "ISO timestamp of most recent report"
+        }
+      },
+      "required": ["appVersion", "exceptionType", "status", "occurrences"]
+    },
+    "AdMobReport": {
+      "title": "AdMob Performance Metric",
+      "description": "Authorized aggregate AdMob advertising performance",
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "Date format YYYY-MM-DD"
+        },
+        "impressions": {
+          "type": "number",
+          "description": "Total ad impressions"
+        },
+        "clicks": {
+          "type": "number",
+          "description": "Total ad clicks"
+        },
+        "estimatedEarnings": {
+          "type": "number",
+          "description": "Estimated revenue in USD"
+        },
+        "ecpm": {
+          "type": "number",
+          "description": "Effective cost per mille"
+        },
+        "adFormat": {
+          "type": "string",
+          "description": "BANNER, INTERSTITIAL, REWARDED"
+        }
+      },
+      "required": ["date", "impressions", "estimatedEarnings"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Authorized dashboard administrators and analysts"
+    },
+    "/app_config/{configId}": {
+      "schema": "AppConfig",
+      "description": "Live application feature flags, maintenance mode, and ad rules"
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Audit trail of administrator actions"
+    },
+    "/analytics_aggregates/{date}": {
+      "schema": "AnalyticsAggregate",
+      "description": "Aggregated usage metrics by date"
+    },
+    "/crash_reports/{reportId}": {
+      "schema": "CrashReport",
+      "description": "Crashlytics sanitized issue summaries"
+    },
+    "/admob_reports/{reportId}": {
+      "schema": "AdMobReport",
+      "description": "AdMob metrics and revenue estimates"
+    }
+  }
+}

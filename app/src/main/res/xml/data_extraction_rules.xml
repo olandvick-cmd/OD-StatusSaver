@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Do not backup user media to cloud -->
+        <exclude domain="sharedpref" path="saf_tree_uris.preferences_pb" />
+        <exclude domain="database" path="od_status_saver.db" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="od_status_saver.db" />
+    </device-transfer>
+</data-extraction-rules>

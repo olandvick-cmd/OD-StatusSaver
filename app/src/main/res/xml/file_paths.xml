@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Public Pictures/ODStatusSaver and Movies/ODStatusSaver sharing -->
+    <external-path
+        name="external_pictures"
+        path="Pictures/ODStatusSaver/" />
+    <external-path
+        name="external_movies"
+        path="Movies/ODStatusSaver/" />
+    <!-- App cache directory for temporary sharing streams -->
+    <cache-path
+        name="cache_media"
+        path="status_share/" />
+</paths>
