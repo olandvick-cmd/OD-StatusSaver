@@ -86,10 +86,11 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 // Test connection on boot per Firebase skill guidelines
 export async function testFirestoreConnection() {
   try {
-    await getDocFromServer(doc(db, 'app_config', 'test_connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firebase client is offline or network restricted.');
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error: any) {
+    const msg = error?.message || String(error);
+    if (msg.includes('the client is offline') || msg.includes('token-service-api') || msg.includes('Could not reach Cloud Firestore')) {
+      console.warn('Firestore backend connection pending or operating in offline mode:', msg);
     }
   }
 }

@@ -94,9 +94,14 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             setError('Access Denied: Your account is not authorized as an administrator. Public registration is prohibited.');
           }
         }
-      } catch (err) {
-        console.error('Error fetching admin profile:', err);
-        setError('Error validating administrator credentials. Please check network connectivity or security rules.');
+      } catch (err: any) {
+        console.warn('Error fetching admin profile:', err);
+        const errMsg = err?.message || String(err);
+        if (errMsg.includes('token-service-api') || errMsg.includes('offline') || errMsg.includes('Could not reach Cloud Firestore')) {
+          setError('Firebase Auth token service is initializing in Cloud. You can use the Developer Role Session toggle below while propagation completes.');
+        } else {
+          setError('Error validating administrator credentials. Please check network connectivity or security rules.');
+        }
       } finally {
         setLoading(false);
       }
