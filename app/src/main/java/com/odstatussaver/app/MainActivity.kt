@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
                     val uiState by viewModel.uiState.collectAsState()
 
-                    val activeStatusItem: StatusItem? = rememberSaveable(selectedStatusId, uiState) {
+                    val activeStatusItem: StatusItem? = androidx.compose.runtime.remember(selectedStatusId, uiState) {
                         if (selectedStatusId != null && uiState is StatusUiState.Success) {
                             (uiState as StatusUiState.Success).statuses.find { it.id == selectedStatusId }
                         } else null

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.55"
+        android:scaleY="0.55"
+        android:translateX="24.3"
+        android:translateY="24.3">
+        <!-- Status Saver Down Arrow & Storage Symbol -->
+        <path
+            android:fillColor="#25D366"
+            android:pathData="M54,8 C28.59,8 8,28.59 8,54 C8,63.15 10.66,71.69 15.26,78.86 L10,98 L29.62,92.86 C36.54,96.75 44.97,99 54,99 C79.41,99 100,78.41 100,54 C100,28.59 79.41,8 54,8 Z" />
+        <!-- White Download Arrow and Base Tray -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,32 L54,62 M40,48 L54,62 L68,48"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="6"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M34,72 L74,72"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="6"
+            android:strokeLineCap="round" />
+    </group>
+</vector>
