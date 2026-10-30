@@ -61,6 +61,21 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       try {
+        // Validate that token is fresh and not blocked by unpropagated service
+        await user.getIdToken();
+      } catch (tokenErr: any) {
+        const msg = tokenErr?.message || String(tokenErr);
+        if (msg.includes('token-service-api') || msg.includes('disabled')) {
+          console.warn('Stale auth session encountered; clearing session.');
+          await fbSignOut(auth).catch(() => {});
+          setCurrentUser(null);
+          setAdminProfile(null);
+          setLoading(false);
+          return;
+        }
+      }
+
+      try {
         const adminDocRef = doc(db, 'admins', user.uid);
         const adminSnapshot = await getDoc(adminDocRef);
 

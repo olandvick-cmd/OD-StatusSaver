@@ -83,6 +83,23 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
+// Evict stale or unrefreshable cached tokens to prevent token-service-api loop
+if (typeof window !== 'undefined') {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try {
+        await user.getIdToken();
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        if (msg.includes('token-service-api') || msg.includes('disabled')) {
+          console.warn('Clearing stale auth session for unpropagated project token service.');
+          await fbSignOut(auth).catch(() => {});
+        }
+      }
+    }
+  });
+}
+
 // Test connection on boot per Firebase skill guidelines
 export async function testFirestoreConnection() {
   try {
@@ -90,7 +107,7 @@ export async function testFirestoreConnection() {
   } catch (error: any) {
     const msg = error?.message || String(error);
     if (msg.includes('the client is offline') || msg.includes('token-service-api') || msg.includes('Could not reach Cloud Firestore')) {
-      console.warn('Firestore backend connection pending or operating in offline mode:', msg);
+      console.warn('Firestore backend connection pending or operating in offline mode.');
     }
   }
 }
