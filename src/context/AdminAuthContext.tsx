@@ -34,8 +34,6 @@ interface AdminAuthContextType {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   bootstrapOwnerProfile: () => Promise<void>;
-  loginAsSimulatedAdmin: (role: AdminRole, email: string) => void;
-  isSimulatedSession: boolean;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
@@ -45,7 +43,6 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSimulatedSession, setIsSimulatedSession] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -53,9 +50,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setError(null);
 
       if (!user) {
-        if (!isSimulatedSession) {
-          setAdminProfile(null);
-        }
+        setAdminProfile(null);
         setLoading(false);
         return;
       }
@@ -113,7 +108,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         console.warn('Error fetching admin profile:', err);
         const errMsg = err?.message || String(err);
         if (errMsg.includes('token-service-api') || errMsg.includes('offline') || errMsg.includes('Could not reach Cloud Firestore')) {
-          setError('Firebase Auth token service is initializing in Cloud. You can use the Developer Role Session toggle below while propagation completes.');
+          setError('Firebase Auth is unavailable. Check Firebase Authentication and Firestore connectivity, then try again.');
         } else {
           setError('Error validating administrator credentials. Please check network connectivity or security rules.');
         }
@@ -123,7 +118,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     return () => unsubscribe();
-  }, [isSimulatedSession]);
+  }, []);
 
   const signInWithGoogle = async () => {
     setLoading(true);
@@ -133,7 +128,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (err: any) {
       console.warn('Google sign-in popup error:', err);
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/cancelled-popup-request') {
-        setError('Popup blocked by browser. Please allow popups or use the developer owner session toggle below for testing.');
+        setError('Popup blocked by browser. Please allow popups and try again.');
       } else {
         setError(err?.message || 'Authentication failed. Please retry.');
       }
@@ -143,7 +138,6 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const signOut = async () => {
     setLoading(true);
-    setIsSimulatedSession(false);
     try {
       await fbSignOut(auth);
       setAdminProfile(null);
@@ -174,20 +168,6 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  // Safe developer sandbox session toggle for inspecting the 3 distinct roles in preview
-  const loginAsSimulatedAdmin = (role: AdminRole, email: string) => {
-    setIsSimulatedSession(true);
-    setAdminProfile({
-      uid: `simulated-${role}-${Date.now()}`,
-      email,
-      displayName: role === 'owner' ? 'OD Owner (Olandvick)' : role === 'administrator' ? 'Lead Admin' : 'Security Analyst',
-      role,
-      addedAt: new Date().toISOString(),
-      addedBy: 'local-test-harness'
-    });
-    setLoading(false);
-  };
-
   const role = adminProfile?.role || null;
   const isOwner = role === 'owner';
   const isAdmin = role === 'owner' || role === 'administrator';
@@ -206,9 +186,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isAnalyst,
         signInWithGoogle,
         signOut,
-        bootstrapOwnerProfile,
-        loginAsSimulatedAdmin,
-        isSimulatedSession
+        bootstrapOwnerProfile
       }}
     >
       {children}

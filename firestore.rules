@@ -64,16 +64,9 @@ service cloud.firestore {
       allow list: if isAnalyst();
 
       // Bootstrapped owner can create their own initial document
-      allow create: if isValidId(adminId) && (
-        (isBootstrappedOwner() && request.auth.uid == adminId && request.resource.data.role == 'owner') ||
-        (isOwner() && request.resource.data.role in ['owner', 'administrator', 'analyst']) ||
-        (isAdmin() && request.resource.data.role in ['administrator', 'analyst'])
-      ) && request.resource.data.email is string && request.resource.data.email.size() <= 256;
+      allow create: if isValidId(adminId) && isBootstrappedOwner() && request.auth.uid == adminId && request.resource.data.role == 'owner' && request.resource.data.email is string && request.resource.data.email.size() <= 256;
 
-      allow update: if isValidId(adminId) && (
-        isOwner() ||
-        (isAdmin() && resource.data.role != 'owner' && request.resource.data.role in ['administrator', 'analyst'])
-      );
+      allow update: if false; // Role changes require a trusted Firebase Admin SDK workflow.
 
       // Only owner can delete admin documents (cannot delete self)
       allow delete: if isValidId(adminId) && isOwner() && request.auth.uid != adminId;
