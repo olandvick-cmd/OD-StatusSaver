@@ -29,6 +29,18 @@ object AppConstants {
     const val MIME_TYPE_IMAGE_PREFIX = "image/"
     const val MIME_TYPE_VIDEO_PREFIX = "video/"
 
+    fun getMimeType(extension: String, isVideo: Boolean = false): String {
+        return when (extension.lowercase()) {
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "webp" -> "image/webp"
+            "mp4" -> "video/mp4"
+            "3gp" -> "video/3gpp"
+            "mkv" -> "video/x-matroska"
+            else -> if (isVideo) "video/mp4" else "image/jpeg"
+        }
+    }
+
     // FileProvider Authority
     const val FILE_PROVIDER_AUTHORITY = "com.odstatussaver.app.fileprovider"
 }

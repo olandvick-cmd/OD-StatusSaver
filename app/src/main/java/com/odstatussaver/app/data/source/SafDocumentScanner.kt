@@ -29,7 +29,13 @@ class SafDocumentScanner(private val context: Context) {
         val root = DocumentFile.fromTreeUri(context, treeUri) ?: return emptyList()
         if (!root.exists() || !root.canRead()) return emptyList()
 
-        val documentFiles = root.listFiles()
+        val targetFolder = if (root.name == ".Statuses" || root.name == "Statuses") {
+            root
+        } else {
+            root.findFile(".Statuses") ?: root.findFile("Statuses") ?: root
+        }
+
+        val documentFiles = targetFolder.listFiles()
         val items = mutableListOf<StatusItem>()
 
         for (doc in documentFiles) {

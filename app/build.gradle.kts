@@ -10,45 +10,10 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
 }
 
-// Automatically ensure google-services.json exists before plugin tasks execute
+// Verify that google-services.json exists before plugin tasks execute
 val googleServicesFile = file("google-services.json")
 if (!googleServicesFile.exists()) {
-    googleServicesFile.writeText(
-        """
-        {
-          "project_info": {
-            "project_number": "421596270212",
-            "project_id": "od-status-saver",
-            "storage_bucket": "od-status-saver.appspot.com"
-          },
-          "client": [
-            {
-              "client_info": {
-                "mobilesdk_app_id": "1:421596270212:android:6e4b8595a86a60db2fa15c",
-                "android_client_info": {
-                  "package_name": "com.odstatussaver.app"
-                }
-              },
-              "oauth_client": [],
-              "api_key": [{"current_key": "AIzaSyD-sampleFirebaseApiKeyForConfig"}],
-              "services": {"analytics_service": {"status": 1}}
-            },
-            {
-              "client_info": {
-                "mobilesdk_app_id": "1:421596270212:android:6e4b8595a86a60db2fa15d",
-                "android_client_info": {
-                  "package_name": "com.odstatussaver.app.debug"
-                }
-              },
-              "oauth_client": [],
-              "api_key": [{"current_key": "AIzaSyD-sampleFirebaseApiKeyForConfig"}],
-              "services": {"analytics_service": {"status": 1}}
-            }
-          ],
-          "configuration_version": "1"
-        }
-        """.trimIndent()
-    )
+    logger.warn("google-services.json is missing in app directory. Ensure production configuration is supplied via CI secrets or placed at app/google-services.json.")
 }
 
 android {

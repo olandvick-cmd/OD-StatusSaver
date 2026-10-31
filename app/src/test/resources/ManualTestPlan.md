@@ -50,3 +50,20 @@ This document defines the physical device verification matrix, reproduction step
    * *Expected*: Automatically excluded from grid discovery.
 3. **Revoked SAF Permission**: Go to Android Settings > Apps > Special App Access or clear Document permissions.
    * *Expected*: App detects `SecurityException`, prompts user to re-grant folder permission, without crashing.
+
+### Scenario E: MIME-Type & Gallery Indexing Verification
+1. **PNG / WebP / JPEG Images**: Save statuses across different image formats.
+   * *Expected*: Files are inserted into MediaStore with `image/png`, `image/webp`, and `image/jpeg` respectively. Thumbnail previews render with proper aspect ratio in Google Photos.
+2. **MP4 / 3GP / MKV Videos**: Save statuses across various container formats.
+   * *Expected*: Files are inserted into `Movies/ODStatusSaver` with `video/mp4`, `video/3gpp`, and `video/x-matroska`. Video durations and seek bars function accurately in local media players.
+
+### Scenario F: Low Storage & Interrupted Saves Cleanup
+1. **Simulate Insufficient Storage**: Fill device storage until less than 20MB remains.
+   * *Expected*: App rejects save attempt with "Not enough free storage space on device" before attempting I/O; zero bytes leaked to MediaStore.
+2. **Interrupted Saving**: Initiate a multi-item bulk save and forcefully back out or rotate the device during the write operation.
+   * *Expected*: Coroutine cancellation catches the interrupt, immediately deletes any partial `IS_PENDING` MediaStore rows, and leaves zero corrupt 0-byte orphan files in the gallery.
+
+### Scenario G: Android 14/15 OEM DocumentsUI Folder Selection
+1. **Parent Folder Selection vs .Statuses**:
+   * If OEM picker (e.g. Samsung OneUI / Xiaomi HyperOS) hides dot-directories and forces the user to select `WhatsApp/Media`, verify that `BaseStatusMediaSource` automatically resolves the `.Statuses` subfolder and populates media.
+   * If user explicitly selects `.Statuses`, verify that direct listing functions identically.

@@ -33,16 +33,30 @@ jobs:
             chmod +x gradlew
           fi
 
-      - name: Ensure google-services.json exists
+      - name: Configure Firebase Google Services
+        env:
+          FIREBASE_PROD_CONFIG: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ ! -f app/google-services.json ]; then
-            echo "Generating fallback google-services.json for CI..."
-            echo '{"project_info":{"project_number":"421596270212","project_id":"od-status-saver","storage_bucket":"od-status-saver.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:421596270212:android:6e4b8595a86a60db2fa15c","android_client_info":{"package_name":"com.odstatussaver.app"}},"oauth_client":[],"api_key":[{"current_key":"AIzaSyD-sampleFirebaseApiKeyForConfig"}],"services":{"analytics_service":{"status":1},"appinvite_service":{"status":1,"other_platform_oauth_client":[]},"ads_service":{"status":1}}},{"client_info":{"mobilesdk_app_id":"1:421596270212:android:6e4b8595a86a60db2fa15d","android_client_info":{"package_name":"com.odstatussaver.app.debug"}},"oauth_client":[],"api_key":[{"current_key":"AIzaSyD-sampleFirebaseApiKeyForConfig"}],"services":{"analytics_service":{"status":1},"appinvite_service":{"status":1,"other_platform_oauth_client":[]},"ads_service":{"status":1}}}],"configuration_version":"1"}' > app/google-services.json
+          if [ -n "$FIREBASE_PROD_CONFIG" ]; then
+            echo "Applying production Firebase configuration from repository secret GOOGLE_SERVICES_JSON..."
+            echo "$FIREBASE_PROD_CONFIG" > app/google-services.json
+          elif [ -f app/google-services.json ]; then
+            echo "Using committed Firebase configuration for project opportune-stone-8cxst..."
+          else
+            echo "::warning::No GOOGLE_SERVICES_JSON secret or app/google-services.json found."
           fi
 
       - name: Accept Android SDK licenses
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+
+      - name: Run Unit Tests
+        run: |
+          if [ -f gradlew ]; then
+            ./gradlew testDebugUnitTest --stacktrace --no-daemon
+          else
+            gradle testDebugUnitTest --stacktrace --no-daemon
+          fi
 
       - name: Build Debug APK
         run: |

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ad-services-config>
+    <!-- Privacy Sandbox AdServices Attribution & Topics for AdMob and Firebase Analytics -->
+    <attribution allowAdPartners="true" />
+    <topics allowAdPartners="true" />
+    <protected-audience allowAdPartners="true" />
+</ad-services-config>

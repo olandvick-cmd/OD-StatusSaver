@@ -134,7 +134,13 @@ abstract class BaseStatusMediaSource(
                 try {
                     val rootDoc = DocumentFile.fromTreeUri(context, treeUri)
                     if (rootDoc != null && rootDoc.exists() && rootDoc.canRead()) {
-                        val childDocs = rootDoc.listFiles()
+                        // Accommodate both direct .Statuses folder and parent Media folder selection
+                        val targetFolder = if (rootDoc.name == ".Statuses" || rootDoc.name == "Statuses") {
+                            rootDoc
+                        } else {
+                            rootDoc.findFile(".Statuses") ?: rootDoc.findFile("Statuses") ?: rootDoc
+                        }
+                        val childDocs = targetFolder.listFiles()
                         for (doc in childDocs) {
                             if (doc.isFile) {
                                 val name = doc.name ?: continue

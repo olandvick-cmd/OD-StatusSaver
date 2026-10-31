@@ -90,8 +90,9 @@ class MediaStoreSaver(private val context: Context) {
                 )
             }
 
-            val isVideo = item.mediaType == MediaType.VIDEO
-            val mimeType = if (isVideo) "video/mp4" else "image/jpeg"
+            val ext = item.title.substringAfterLast('.', "").lowercase()
+            val isVideo = item.mediaType == MediaType.VIDEO || AppConstants.SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
+            val mimeType = AppConstants.getMimeType(ext, isVideo)
             val relativeDir = if (isVideo) AppConstants.SAVE_DIR_MOVIES else AppConstants.SAVE_DIR_PICTURES
 
             val sanitizedName = item.title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
