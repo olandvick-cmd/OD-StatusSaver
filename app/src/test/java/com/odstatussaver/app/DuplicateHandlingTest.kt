@@ -39,10 +39,11 @@ class DuplicateHandlingTest {
     fun testIsSavedStatusFlagging() {
         val savedOriginalIds = setOf("id_01", "id_02")
 
+        val mockUri = TestFixtures.createMockUri()
         val items = listOf(
-            StatusItem("id_01", "photo1.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
-            StatusItem("id_02", "video1.mp4", android.net.Uri.EMPTY, null, MediaType.VIDEO, 200, 2L, WhatsAppSource.STANDARD),
-            StatusItem("id_03", "photo2.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 300, 3L, WhatsAppSource.STANDARD)
+            StatusItem("id_01", "photo1.jpg", mockUri, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
+            StatusItem("id_02", "video1.mp4", mockUri, null, MediaType.VIDEO, 200, 2L, WhatsAppSource.STANDARD),
+            StatusItem("id_03", "photo2.jpg", mockUri, null, MediaType.IMAGE, 300, 3L, WhatsAppSource.STANDARD)
         )
 
         val updatedItems = items.map { it.copy(isSaved = savedOriginalIds.contains(it.id)) }

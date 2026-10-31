@@ -56,11 +56,11 @@ class FilteringAndValidationTest {
     @Test
     fun testMediaTypeClassification() {
         val jpgItem = StatusItem(
-            id = "1", title = "photo.jpg", uri = android.net.Uri.EMPTY,
+            id = "1", title = "photo.jpg", uri = TestFixtures.createMockUri(),
             mediaType = MediaType.IMAGE, sizeBytes = 100, lastModified = 1L, source = WhatsAppSource.STANDARD
         )
         val mp4Item = StatusItem(
-            id = "2", title = "video.mp4", uri = android.net.Uri.EMPTY,
+            id = "2", title = "video.mp4", uri = TestFixtures.createMockUri(),
             mediaType = MediaType.VIDEO, sizeBytes = 200, lastModified = 2L, source = WhatsAppSource.BUSINESS
         )
 

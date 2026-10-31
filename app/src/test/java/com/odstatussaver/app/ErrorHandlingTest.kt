@@ -41,7 +41,7 @@ class ErrorHandlingTest {
         val successes = 4
         val failures = listOf(
             Pair(
-                StatusItem("id_expired", "expired.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
+                StatusItem("id_expired", "expired.jpg", TestFixtures.createMockUri(), null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
                 "This status has expired or was removed by WhatsApp."
             )
         )

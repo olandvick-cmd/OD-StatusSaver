@@ -32,7 +32,7 @@ class StatusRepositoryTest {
         val imageItem = StatusItem(
             id = "test_image",
             title = "status_1.jpg",
-            uri = android.net.Uri.EMPTY,
+            uri = TestFixtures.createMockUri(),
             mediaType = MediaType.IMAGE,
             sizeBytes = 1024,
             lastModified = 1000L,
@@ -42,7 +42,7 @@ class StatusRepositoryTest {
         val videoItem = StatusItem(
             id = "test_video",
             title = "status_video.mp4",
-            uri = android.net.Uri.EMPTY,
+            uri = TestFixtures.createMockUri(),
             mediaType = MediaType.VIDEO,
             sizeBytes = 20480,
             lastModified = 2000L,

@@ -78,7 +78,7 @@ class MediaEngineComprehensiveTest {
 
     @Test
     fun testDuplicateSaveOutcomeIndication() {
-        val dummySavedUri = Uri.parse("content://media/external/images/media/42")
+        val dummySavedUri = TestFixtures.createMockUri()
         val duplicateSuccess = SaveStatusOutcome.Success(savedUri = dummySavedUri, isDuplicate = true)
         val freshSuccess = SaveStatusOutcome.Success(savedUri = dummySavedUri, isDuplicate = false)
 
@@ -130,9 +130,10 @@ class MediaEngineComprehensiveTest {
 
     @Test
     fun testPartialBulkSaveReportsBothSuccessesAndFailures() {
-        val item1 = StatusItem("1", "img1.jpg", Uri.EMPTY, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD)
-        val item2 = StatusItem("2", "img2.jpg", Uri.EMPTY, null, MediaType.IMAGE, 100, 2L, WhatsAppSource.STANDARD)
-        val item3 = StatusItem("3", "corrupt.jpg", Uri.EMPTY, null, MediaType.IMAGE, 0, 3L, WhatsAppSource.STANDARD)
+        val mockUri = TestFixtures.createMockUri()
+        val item1 = StatusItem("1", "img1.jpg", mockUri, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD)
+        val item2 = StatusItem("2", "img2.jpg", mockUri, null, MediaType.IMAGE, 100, 2L, WhatsAppSource.STANDARD)
+        val item3 = StatusItem("3", "corrupt.jpg", mockUri, null, MediaType.IMAGE, 0, 3L, WhatsAppSource.STANDARD)
 
         val report = BulkSaveReport(
             totalCount = 3,
@@ -155,10 +156,11 @@ class MediaEngineComprehensiveTest {
 
     @Test
     fun testMediaTypeDistinction() {
+        val mockUri = TestFixtures.createMockUri()
         val imageItem = StatusItem(
             id = "img_1",
             title = "status.webp",
-            uri = Uri.EMPTY,
+            uri = mockUri,
             mediaType = MediaType.IMAGE,
             sizeBytes = 25000,
             lastModified = 1000L,
@@ -168,7 +170,7 @@ class MediaEngineComprehensiveTest {
         val videoItem = StatusItem(
             id = "vid_1",
             title = "status.mp4",
-            uri = Uri.EMPTY,
+            uri = mockUri,
             mediaType = MediaType.VIDEO,
             sizeBytes = 1500000,
             lastModified = 2000L,

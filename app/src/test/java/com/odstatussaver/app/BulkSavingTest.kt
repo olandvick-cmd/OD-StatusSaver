@@ -55,10 +55,11 @@ class BulkSavingTest {
 
     @Test
     fun testMultiSelectionItemFiltering() {
+        val mockUri = TestFixtures.createMockUri()
         val allItems = listOf(
-            StatusItem("id_1", "img1.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
-            StatusItem("id_2", "img2.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 100, 2L, WhatsAppSource.STANDARD),
-            StatusItem("id_3", "img3.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 100, 3L, WhatsAppSource.STANDARD)
+            StatusItem("id_1", "img1.jpg", mockUri, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
+            StatusItem("id_2", "img2.jpg", mockUri, null, MediaType.IMAGE, 100, 2L, WhatsAppSource.STANDARD),
+            StatusItem("id_3", "img3.jpg", mockUri, null, MediaType.IMAGE, 100, 3L, WhatsAppSource.STANDARD)
         )
 
         val selectedIds = setOf("id_1", "id_3")

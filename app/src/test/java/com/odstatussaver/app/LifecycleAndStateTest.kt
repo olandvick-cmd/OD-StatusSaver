@@ -14,8 +14,8 @@ class LifecycleAndStateTest {
     @Test
     fun testSelectedStatusIdSurvivesRecreation() {
         val testStatuses = listOf(
-            StatusItem("wa_1", "photo1.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
-            StatusItem("wa_2", "video1.mp4", android.net.Uri.EMPTY, null, MediaType.VIDEO, 200, 2L, WhatsAppSource.STANDARD)
+            StatusItem("wa_1", "photo1.jpg", TestFixtures.createMockUri(), null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD),
+            StatusItem("wa_2", "video1.mp4", TestFixtures.createMockUri(), null, MediaType.VIDEO, 200, 2L, WhatsAppSource.STANDARD)
         )
 
         // Simulate activity recreation where selectedStatusId was stored in savedInstanceState
@@ -40,7 +40,7 @@ class LifecycleAndStateTest {
     @Test
     fun testRecreationWithInvalidIdReturnsNull() {
         val testStatuses = listOf(
-            StatusItem("wa_1", "photo1.jpg", android.net.Uri.EMPTY, null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD)
+            StatusItem("wa_1", "photo1.jpg", TestFixtures.createMockUri(), null, MediaType.IMAGE, 100, 1L, WhatsAppSource.STANDARD)
         )
 
         val restoredStatus = testStatuses.find { it.id == "non_existent_id" }
