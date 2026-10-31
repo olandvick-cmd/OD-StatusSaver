@@ -2,10 +2,11 @@ package com.odstatussaver.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +16,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
@@ -24,6 +24,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.odstatussaver.app.domain.model.StatusItem
@@ -49,27 +52,19 @@ fun StatusCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(0.82f)
-            .clip(RoundedCornerShape(16.dp))
+        modifier = modifier.fillMaxWidth().aspectRatio(0.78f)
+            .clip(RoundedCornerShape(18.dp))
             .border(
-                width = if (isSelected) 3.dp else 0.dp,
+                width = if (isSelected) 2.dp else 0.dp,
                 color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(18.dp)
             )
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Coil Async Image Thumbnail
+        Box(Modifier.fillMaxSize()) {
             AsyncImage(
                 model = status.uri,
                 contentDescription = status.title,
@@ -77,96 +72,60 @@ fun StatusCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Multi-Select Checkmark overlay
             if (isSelectionMode) {
-                Box(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .align(Alignment.TopStart)
-                        .size(26.dp)
-                        .background(
-                            if (isSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.5f),
-                            CircleShape
-                        )
-                        .border(1.5.dp, Color.White, CircleShape),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(9.dp).size(26.dp),
+                    shape = CircleShape,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.48f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White)
                 ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Selected",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
+                    Box(contentAlignment = Alignment.Center) {
+                        if (isSelected) Icon(Icons.Default.Check, contentDescription = "Selected", tint = Color.White, modifier = Modifier.size(16.dp))
                     }
                 }
             }
 
-            // Gradient scrim at bottom for action buttons
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
-                        )
-                    )
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.68f))))
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
             ) {
-                // Video badge
-                if (status.isVideo) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 6.dp, vertical = 3.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Video",
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (status.isVideo) {
+                        Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.48f)) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = "Video", tint = Color.White, modifier = Modifier.padding(5.dp).size(17.dp))
+                        }
+                    } else {
+                        Box(Modifier.size(27.dp))
                     }
-                }
 
-                // Individual action buttons (hidden during multi-select mode)
-                if (!isSelectionMode) {
-                    Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                        if (onDeleteClick != null) {
-                            IconButton(
-                                onClick = onDeleteClick,
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .background(Color.Red.copy(alpha = 0.8f), CircleShape)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        } else {
-                            IconButton(
-                                onClick = onSaveClick,
-                                enabled = !status.isSaved,
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .background(
-                                        if (status.isSaved) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.65f),
-                                        CircleShape
-                                    )
-                            ) {
-                                Icon(
-                                    imageVector = if (status.isSaved) Icons.Default.Check else Icons.Default.Download,
-                                    contentDescription = if (status.isSaved) "Saved" else "Download",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
+                    if (!isSelectionMode) {
+                        IconButton(
+                            onClick = onDeleteClick ?: onSaveClick,
+                            enabled = onDeleteClick != null || !status.isSaved,
+                            modifier = Modifier.size(34.dp).background(
+                                if (status.isSaved && onDeleteClick == null) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.94f),
+                                CircleShape
+                            )
+                        ) {
+                            Icon(
+                                imageVector = when {
+                                    onDeleteClick != null -> Icons.Default.Delete
+                                    status.isSaved -> Icons.Default.Check
+                                    else -> Icons.Default.Download
+                                },
+                                contentDescription = when {
+                                    onDeleteClick != null -> "Delete"
+                                    status.isSaved -> "Saved"
+                                    else -> "Save"
+                                },
+                                tint = if (status.isSaved && onDeleteClick == null) Color.White else Color(0xFF166534),
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
