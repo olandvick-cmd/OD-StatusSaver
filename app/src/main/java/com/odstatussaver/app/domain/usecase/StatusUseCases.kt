@@ -1,6 +1,6 @@
 package com.odstatussaver.app.domain.usecase
 
-import android.net.Uri
+import com.odstatussaver.app.data.source.SaveStatusOutcome
 import com.odstatussaver.app.domain.model.StatusItem
 import com.odstatussaver.app.domain.model.WhatsAppSource
 import com.odstatussaver.app.domain.repository.StatusRepository
@@ -21,7 +21,7 @@ class GetStatusesUseCase(
 class SaveStatusUseCase(
     private val repository: StatusRepository
 ) {
-    suspend operator fun invoke(item: StatusItem): Result<Uri> {
+    suspend operator fun invoke(item: StatusItem): SaveStatusOutcome {
         return repository.saveStatus(item)
     }
 }
