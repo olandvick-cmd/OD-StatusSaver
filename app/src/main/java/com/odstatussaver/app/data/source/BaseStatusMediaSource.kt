@@ -27,20 +27,24 @@ abstract class BaseStatusMediaSource(
 
     override fun isInstalled(): Boolean {
         return try {
-            val pm = context.packageManager
-            pm.getPackageInfo(packageName, 0)
+            context.packageManager.getPackageInfo(packageName, 0)
             true
         } catch (e: PackageManager.NameNotFoundException) {
             false
         }
     }
 
+    /**
+     * A non-null File.listFiles() result is not proof of access on Android 11+.
+     * Scoped storage can expose the directory but return an empty listing.
+     * Only treat direct access as usable when actual status media is visible.
+     */
     override fun canAccessDirectly(): Boolean {
         return try {
-            val candidates = getCandidateDirectories()
-            val existingDir = candidates.firstOrNull { it.exists() && it.canRead() }
-            val files = existingDir?.listFiles()
-            files != null
+            getCandidateDirectories().asSequence()
+                .filter { it.exists() && it.isDirectory && it.canRead() }
+                .mapNotNull { it.listFiles() }
+                .any { files -> files.any { isValidMediaFile(it.name, it.length()) } }
         } catch (e: Exception) {
             false
         }
@@ -60,19 +64,21 @@ abstract class BaseStatusMediaSource(
     }
 
     override suspend fun hasAccess(): Boolean {
+        // On modern Android, an empty direct listing is ambiguous because of
+        // scoped storage. Require either visible media or an explicit SAF grant.
         return canAccessDirectly() || hasSafPermission()
     }
 
-    override suspend fun getPersistedTreeUri(): Uri? {
-        return prefStore.getTreeUri(sourceType)
-    }
+    override suspend fun getPersistedTreeUri(): Uri? = prefStore.getTreeUri(sourceType)
 
     override suspend fun setPersistedTreeUri(treeUri: Uri) {
         try {
-            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
+            context.contentResolver.takePersistableUriPermission(
+                treeUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
         } catch (e: Exception) {
-            // Already held or not persistable
+            // The grant may already be held or the provider may not support persistence.
         }
         prefStore.saveTreeUri(sourceType, treeUri)
     }
@@ -86,9 +92,7 @@ abstract class BaseStatusMediaSource(
             if (item.file != null) {
                 item.file.exists() && item.file.canRead() && item.file.length() > 0
             } else {
-                context.contentResolver.openInputStream(item.uri)?.use { stream ->
-                    stream.read() != -1
-                } ?: false
+                context.contentResolver.openInputStream(item.uri)?.use { it.read() != -1 } ?: false
             }
         } catch (e: Exception) {
             false
@@ -97,87 +101,83 @@ abstract class BaseStatusMediaSource(
 
     override suspend fun discoverStatuses(): Result<List<StatusItem>> = withContext(Dispatchers.IO) {
         runCatching {
-            val items = mutableListOf<StatusItem>()
+            // 1. Try direct paths, but only accept the scan if it actually finds
+            // supported media. An empty/restricted listing must fall through to SAF.
+            for (directory in getCandidateDirectories()) {
+                if (!directory.exists() || !directory.isDirectory || !directory.canRead()) continue
 
-            // 1. First probe direct candidate paths
-            val candidates = getCandidateDirectories()
-            val directDir = candidates.firstOrNull { it.exists() && it.canRead() }
-
-            if (directDir != null) {
-                val files = directDir.listFiles()
-                if (files != null) {
-                    for (file in files) {
-                        if (isValidMediaFile(file.name, file.length())) {
-                            val ext = file.extension.lowercase()
-                            val isVideo = AppConstants.SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
-                            items.add(
-                                StatusItem(
-                                    id = file.absolutePath,
-                                    title = file.name,
-                                    uri = file.toUri(),
-                                    file = file,
-                                    mediaType = if (isVideo) MediaType.VIDEO else MediaType.IMAGE,
-                                    sizeBytes = file.length(),
-                                    lastModified = file.lastModified(),
-                                    source = sourceType
-                                )
-                            )
-                        }
-                    }
-                    return@runCatching items.sortedByDescending { it.lastModified }
-                }
-            }
-
-            // 2. Fallback to SAF DocumentFile tree
-            val treeUri = getPersistedTreeUri()
-            if (treeUri != null) {
-                try {
-                    val rootDoc = DocumentFile.fromTreeUri(context, treeUri)
-                    if (rootDoc != null && rootDoc.exists() && rootDoc.canRead()) {
-                        // Accommodate both direct .Statuses folder and parent Media folder selection
-                        val targetFolder = if (rootDoc.name == ".Statuses" || rootDoc.name == "Statuses") {
-                            rootDoc
-                        } else {
-                            rootDoc.findFile(".Statuses") ?: rootDoc.findFile("Statuses") ?: rootDoc
-                        }
-                        val childDocs = targetFolder.listFiles()
-                        for (doc in childDocs) {
-                            if (doc.isFile) {
-                                val name = doc.name ?: continue
-                                val size = doc.length()
-                                if (isValidMediaFile(name, size)) {
-                                    val ext = name.substringAfterLast('.', "").lowercase()
-                                    val mimeType = doc.type ?: ""
-                                    val isVideo = mimeType.startsWith("video/") || AppConstants.SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
-                                    val lastModified = doc.lastModified()
-
-                                    items.add(
-                                        StatusItem(
-                                            id = doc.uri.toString(),
-                                            title = name,
-                                            uri = doc.uri,
-                                            file = null,
-                                            mediaType = if (isVideo) MediaType.VIDEO else MediaType.IMAGE,
-                                            sizeBytes = size,
-                                            lastModified = if (lastModified > 0) lastModified else System.currentTimeMillis(),
-                                            source = sourceType
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                        return@runCatching items.sortedByDescending { it.lastModified }
-                    } else {
-                        clearPersistedTreeUri()
-                        throw IllegalStateException("Folder permission for ${sourceType.displayName} is no longer accessible.")
-                    }
+                val files = try {
+                    directory.listFiles()
                 } catch (e: SecurityException) {
-                    clearPersistedTreeUri()
-                    throw e
+                    null
+                } ?: continue
+
+                val directItems = files.mapNotNull { file ->
+                    if (!file.isFile || !isValidMediaFile(file.name, file.length())) return@mapNotNull null
+                    val ext = file.extension.lowercase()
+                    val isVideo = AppConstants.SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
+                    StatusItem(
+                        id = file.absolutePath,
+                        title = file.name,
+                        uri = file.toUri(),
+                        file = file,
+                        mediaType = if (isVideo) MediaType.VIDEO else MediaType.IMAGE,
+                        sizeBytes = file.length(),
+                        lastModified = file.lastModified(),
+                        source = sourceType
+                    )
+                }
+
+                if (directItems.isNotEmpty()) {
+                    return@runCatching directItems.sortedByDescending { it.lastModified }
                 }
             }
 
-            throw SecurityException("Permission required to access ${sourceType.displayName} status folder.")
+            // 2. SAF is the reliable route on Android 11+ and the fallback when
+            // direct file access is restricted or the directory listing is empty.
+            val treeUri = getPersistedTreeUri()
+                ?: throw SecurityException("Folder access required for ${sourceType.displayName}. Tap Grant Folder Access and select its .Statuses folder.")
+
+            try {
+                val rootDoc = DocumentFile.fromTreeUri(context, treeUri)
+                if (rootDoc == null || !rootDoc.exists() || !rootDoc.canRead()) {
+                    clearPersistedTreeUri()
+                    throw SecurityException("Folder permission for ${sourceType.displayName} is no longer accessible. Please grant access again.")
+                }
+
+                val targetFolder = if (rootDoc.name == ".Statuses" || rootDoc.name == "Statuses") {
+                    rootDoc
+                } else {
+                    rootDoc.findFile(".Statuses") ?: rootDoc.findFile("Statuses") ?: rootDoc
+                }
+
+                val items = targetFolder.listFiles().mapNotNull { doc ->
+                    if (!doc.isFile) return@mapNotNull null
+                    val name = doc.name ?: return@mapNotNull null
+                    val size = doc.length()
+                    if (!isValidMediaFile(name, size)) return@mapNotNull null
+
+                    val ext = name.substringAfterLast('.', "").lowercase()
+                    val isVideo = (doc.type ?: "").startsWith("video/") ||
+                        AppConstants.SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
+                    val modified = doc.lastModified()
+
+                    StatusItem(
+                        id = doc.uri.toString(),
+                        title = name,
+                        uri = doc.uri,
+                        file = null,
+                        mediaType = if (isVideo) MediaType.VIDEO else MediaType.IMAGE,
+                        sizeBytes = size,
+                        lastModified = if (modified > 0) modified else System.currentTimeMillis(),
+                        source = sourceType
+                    )
+                }
+                items.sortedByDescending { it.lastModified }
+            } catch (e: SecurityException) {
+                clearPersistedTreeUri()
+                throw e
+            }
         }
     }
 
@@ -186,6 +186,6 @@ abstract class BaseStatusMediaSource(
         if (name.startsWith(".") || name.startsWith(".nomedia")) return false
         val ext = name.substringAfterLast('.', "").lowercase()
         return AppConstants.SUPPORTED_IMAGE_EXTENSIONS.contains(ext) ||
-                AppConstants.SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
+            AppConstants.SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
     }
 }
