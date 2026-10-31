@@ -148,7 +148,6 @@ export const WebAdminDashboard: React.FC = () => {
               }`}>
                 Role: {role?.toUpperCase()}
               </span>
-}
             </div>
 
             <div className="flex items-center gap-3 text-xs text-slate-400 mt-1 flex-wrap font-mono">
