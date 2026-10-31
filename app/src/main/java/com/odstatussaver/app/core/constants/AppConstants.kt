@@ -8,12 +8,21 @@ object AppConstants {
     const val PACKAGE_WHATSAPP_BUSINESS = "com.whatsapp.w4b"
 
     // Storage Paths - Standard WhatsApp
-    val LEGACY_PATH_WHATSAPP = "${Environment.getExternalStorageDirectory().absolutePath}/WhatsApp/Media/.Statuses"
-    val MODERN_PATH_WHATSAPP = "${Environment.getExternalStorageDirectory().absolutePath}/Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
+    // Lazy initialization keeps JVM unit tests from invoking Android framework stubs.
+    val LEGACY_PATH_WHATSAPP: String by lazy {
+        "${Environment.getExternalStorageDirectory().absolutePath}/WhatsApp/Media/.Statuses"
+    }
+    val MODERN_PATH_WHATSAPP: String by lazy {
+        "${Environment.getExternalStorageDirectory().absolutePath}/Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
+    }
 
     // Storage Paths - WhatsApp Business
-    val LEGACY_PATH_WHATSAPP_BUSINESS = "${Environment.getExternalStorageDirectory().absolutePath}/WhatsApp Business/Media/.Statuses"
-    val MODERN_PATH_WHATSAPP_BUSINESS = "${Environment.getExternalStorageDirectory().absolutePath}/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses"
+    val LEGACY_PATH_WHATSAPP_BUSINESS: String by lazy {
+        "${Environment.getExternalStorageDirectory().absolutePath}/WhatsApp Business/Media/.Statuses"
+    }
+    val MODERN_PATH_WHATSAPP_BUSINESS: String by lazy {
+        "${Environment.getExternalStorageDirectory().absolutePath}/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses"
+    }
 
     // MediaStore destination relative paths
     const val SAVE_DIR_PICTURES = "Pictures/ODStatusSaver"
