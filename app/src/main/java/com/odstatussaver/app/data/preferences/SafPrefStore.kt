@@ -20,6 +20,7 @@ class SafPrefStore(private val context: Context) {
     private val keyWhatsappSafUri = stringPreferencesKey("saf_tree_uri_whatsapp")
     private val keyBusinessSafUri = stringPreferencesKey("saf_tree_uri_business")
     private val keyAnalyticsEnabled = booleanPreferencesKey("analytics_collection_enabled")
+    private val keyNotificationPromptDismissed = booleanPreferencesKey("notification_prompt_dismissed")
 
     private fun getKeyForSource(source: WhatsAppSource): Preferences.Key<String> {
         return when (source) {
@@ -50,6 +51,14 @@ class SafPrefStore(private val context: Context) {
         val key = getKeyForSource(source)
         context.dataStore.edit { preferences ->
             preferences.remove(key)
+        }
+    }
+
+    suspend fun isNotificationPromptDismissed(): Boolean = context.dataStore.data.first()[keyNotificationPromptDismissed] ?: false
+
+    suspend fun setNotificationPromptDismissed(dismissed: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[keyNotificationPromptDismissed] = dismissed
         }
     }
 
