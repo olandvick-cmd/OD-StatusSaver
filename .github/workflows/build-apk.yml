@@ -35,11 +35,13 @@ jobs:
       # It registers both debug and release application IDs so the Google Services
       # Gradle plugin can process the debug variant without production credentials.
       - name: Configure CI-only Firebase placeholder
+        env:
+          FIREBASE_PROD_CONFIG: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           mkdir -p app
-          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+          if [ -n "$FIREBASE_PROD_CONFIG" ]; then
             echo "Using supplied Firebase configuration."
-            printf '%s' "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+            printf '%s' "$FIREBASE_PROD_CONFIG" > app/google-services.json
           elif [ -f app/google-services.json ]; then
             echo "Using repository-provided Firebase configuration."
           else
