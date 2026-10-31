@@ -17,7 +17,6 @@ import firebaseConfig from '../../../firebase-applet-config.json';
 export const AdminLoginView: React.FC = () => {
   const { 
     signInWithGoogle, 
-    loginAsSimulatedAdmin, 
     loading, 
     error 
   } = useAdminAuth();
