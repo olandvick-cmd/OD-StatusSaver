@@ -111,65 +111,7 @@ export const AdminLoginView: React.FC = () => {
         </div>
       </div>
 
-      {/* Developer Environment & RBAC Persona Switcher (For local preview verification) */}
-      <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5">
-        <div className="flex items-center gap-2 mb-2">
-          <KeyRound className="w-4 h-4 text-teal-400" />
-          <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300 font-mono">
-            Environment RBAC Simulation Sandbox
-          </h3>
-        </div>
-        <p className="text-xs text-slate-400 mb-4">
-          Test and verify the 3 distinct permission tiers without requiring 3 separate external Google logins in this preview session:
-        </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <button
-            onClick={() => loginAsSimulatedAdmin('owner', OWNER_BOOTSTRAP_EMAIL)}
-            className="p-3 rounded-xl bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/40 text-left transition cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs text-purple-300">Owner</span>
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200">
-                Full Root
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300">
-              Manage team, edit ad rules, maintenance, wipe data.
-            </p>
-          </button>
-
-          <button
-            onClick={() => loginAsSimulatedAdmin('administrator', 'ops-lead@odstatussaver.internal')}
-            className="p-3 rounded-xl bg-blue-950/40 hover:bg-blue-900/50 border border-blue-500/40 text-left transition cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs text-blue-300">Administrator</span>
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-200">
-                Ops Admin
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300">
-              Configure remote messages, ad frequencies, resolve crashes.
-            </p>
-          </button>
-
-          <button
-            onClick={() => loginAsSimulatedAdmin('analyst', 'analyst@odstatussaver.internal')}
-            className="p-3 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/40 text-left transition cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs text-emerald-300">Analyst</span>
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
-                Read-Only
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300">
-              Inspect DAU, usage metrics, ad performance, export CSV.
-            </p>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
