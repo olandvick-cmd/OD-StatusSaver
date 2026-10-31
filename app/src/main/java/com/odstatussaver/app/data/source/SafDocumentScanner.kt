@@ -2,6 +2,7 @@ package com.odstatussaver.app.data.source
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import com.odstatussaver.app.core.constants.AppConstants
 import com.odstatussaver.app.domain.model.MediaType
@@ -26,13 +27,14 @@ class SafDocumentScanner(private val context: Context) {
      * Traverses the DocumentFile tree and extracts valid image and video statuses.
      */
     fun scan(treeUri: Uri, source: WhatsAppSource): List<StatusItem> {
+        if (!isTreeForSource(treeUri, source)) return emptyList()
         val root = DocumentFile.fromTreeUri(context, treeUri) ?: return emptyList()
         if (!root.exists() || !root.canRead()) return emptyList()
 
         val targetFolder = if (root.name == ".Statuses" || root.name == "Statuses") {
             root
         } else {
-            root.findFile(".Statuses") ?: root.findFile("Statuses") ?: root
+            root.findFile(".Statuses") ?: root.findFile("Statuses") ?: return emptyList()
         }
 
         val documentFiles = targetFolder.listFiles()
@@ -73,4 +75,19 @@ class SafDocumentScanner(private val context: Context) {
 
         return items.sortedByDescending { it.lastModified }
     }
+    private fun isTreeForSource(treeUri: Uri, source: WhatsAppSource): Boolean {
+        return try {
+            val id = DocumentsContract.getTreeDocumentId(treeUri).lowercase()
+            when (source) {
+                WhatsAppSource.STANDARD ->
+                    (id.contains("com.whatsapp/") || id.contains("whatsapp/media/")) &&
+                        !id.contains("com.whatsapp.w4b") && !id.contains("whatsapp business")
+                WhatsAppSource.BUSINESS ->
+                    id.contains("com.whatsapp.w4b/") || id.contains("whatsapp business/")
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
 }
