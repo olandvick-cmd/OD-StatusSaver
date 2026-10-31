@@ -1,6 +1,9 @@
 package com.odstatussaver.app
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import com.odstatussaver.app.core.analytics.AnalyticsTracker
 import com.odstatussaver.app.core.analytics.FirebaseAnalyticsTracker
 import com.odstatussaver.app.core.crashlytics.CrashReporter
@@ -38,6 +41,7 @@ class ODStatusSaverApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        createNotificationChannel()
 
         // Initialize local Room DB
         database = AppDatabase.getDatabase(this)
@@ -68,7 +72,21 @@ class ODStatusSaverApp : Application() {
         )
     }
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                STATUS_NOTIFICATION_CHANNEL_ID,
+                "Status Saver Updates",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Important updates from OD Status Saver"
+            }
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
+    }
+
     companion object {
+        const val STATUS_NOTIFICATION_CHANNEL_ID = "status_saver_updates"
         lateinit var instance: ODStatusSaverApp
             private set
     }

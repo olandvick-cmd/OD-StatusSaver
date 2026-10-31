@@ -18,6 +18,7 @@ import com.odstatussaver.app.core.ads.ConsentManager
 import com.odstatussaver.app.core.theme.ODStatusSaverTheme
 import com.odstatussaver.app.domain.model.StatusItem
 import com.odstatussaver.app.ui.screens.home.HomeScreen
+import com.odstatussaver.app.ui.screens.permission.PermissionSetupScreen
 import com.odstatussaver.app.ui.screens.settings.SettingsScreen
 import com.odstatussaver.app.ui.screens.viewer.MediaViewerScreen
 import com.odstatussaver.app.ui.viewmodel.StatusUiState
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var selectedStatusId by rememberSaveable { mutableStateOf<String?>(null) }
                     var isSettingsOpen by rememberSaveable { mutableStateOf(false) }
+                    var isSetupComplete by rememberSaveable { mutableStateOf(false) }
 
                     val uiState by viewModel.uiState.collectAsState()
 
@@ -68,6 +70,13 @@ class MainActivity : ComponentActivity() {
                     }
 
                     when {
+                        !isSetupComplete -> {
+                            PermissionSetupScreen(
+                                repository = app.statusRepository,
+                                prefStore = app.safPrefStore,
+                                onSetupComplete = { isSetupComplete = true }
+                            )
+                        }
                         isSettingsOpen -> {
                             SettingsScreen(
                                 viewModel = viewModel,
