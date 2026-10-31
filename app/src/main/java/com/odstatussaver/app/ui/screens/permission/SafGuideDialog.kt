@@ -1,8 +1,6 @@
 package com.odstatussaver.app.ui.screens.permission
 
-import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.odstatussaver.app.core.constants.AppConstants
 import com.odstatussaver.app.domain.model.WhatsAppSource
 
 @Composable
@@ -96,14 +93,21 @@ fun SafGuideDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val deepLinkUri = if (source == WhatsAppSource.BUSINESS) {
-                        Uri.parse(AppConstants.SAF_TREE_URI_WHATSAPP_BUSINESS)
+                    // OpenDocumentTree expects a DOCUMENT URI as its initial location.
+                    // A TREE URI is unreliable here and can leave users at the storage root.
+                    val documentId = if (source == WhatsAppSource.BUSINESS) {
+                        "primary:Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses"
                     } else {
-                        Uri.parse(AppConstants.SAF_TREE_URI_WHATSAPP)
+                        "primary:Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
                     }
+                    val initialFolderUri = DocumentsContract.buildDocumentUri(
+                        "com.android.externalstorage.documents",
+                        documentId
+                    )
 
-                    // Launch DocumentTree picker
-                    launcher.launch(deepLinkUri)
+                    // Open inside .Statuses so the user only needs to tap
+                    // "Use this folder" and approve the system permission.
+                    launcher.launch(initialFolderUri)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
