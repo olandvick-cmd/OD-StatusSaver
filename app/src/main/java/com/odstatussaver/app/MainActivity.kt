@@ -18,6 +18,7 @@ import com.odstatussaver.app.core.ads.ConsentManager
 import com.odstatussaver.app.core.theme.ODStatusSaverTheme
 import com.odstatussaver.app.domain.model.StatusItem
 import com.odstatussaver.app.ui.screens.home.HomeScreen
+import com.odstatussaver.app.ui.screens.more.MoreScreen
 import com.odstatussaver.app.ui.screens.permission.PermissionSetupScreen
 import com.odstatussaver.app.ui.screens.settings.SettingsScreen
 import com.odstatussaver.app.ui.screens.viewer.MediaViewerScreen
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var selectedStatusId by rememberSaveable { mutableStateOf<String?>(null) }
                     var isSettingsOpen by rememberSaveable { mutableStateOf(false) }
+                    var isMoreOpen by rememberSaveable { mutableStateOf(false) }
                     var isSetupComplete by rememberSaveable { mutableStateOf(false) }
 
                     val uiState by viewModel.uiState.collectAsState()
@@ -83,6 +85,16 @@ class MainActivity : ComponentActivity() {
                                 onBack = { isSettingsOpen = false },
                                 onShowAdPrivacyOptions = {
                                     consentManager.showPrivacyOptionsForm(this@MainActivity) {}
+                                }
+                            )
+                        }
+                        isMoreOpen -> {
+                            MoreScreen(
+                                onBack = { isMoreOpen = false },
+                                onSettingsClick = {
+                                    isMoreOpen = false
+                                    viewModel.logHelpView("settings")
+                                    isSettingsOpen = true
                                 }
                             )
                         }
@@ -129,10 +141,7 @@ class MainActivity : ComponentActivity() {
                                     viewModel.logMediaPreview(status)
                                     selectedStatusId = status.id
                                 },
-                                onSettingsClick = {
-                                    viewModel.logHelpView("settings")
-                                    isSettingsOpen = true
-                                }
+                                onMoreClick = { isMoreOpen = true }
                             )
                         }
                     }

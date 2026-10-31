@@ -1,5 +1,10 @@
 package com.odstatussaver.app.ui.screens.settings
 
+import android.content.Intent
+import android.provider.Settings as AndroidSettings
+import com.odstatussaver.app.BuildConfig
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,6 +68,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onShowAdPrivacyOptions: (() -> Unit)? = null
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var hasWhatsAppAccess by remember { mutableStateOf(false) }
     var hasBusinessAccess by remember { mutableStateOf(false) }
@@ -304,6 +310,65 @@ fun SettingsScreen(
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+
+            Text(
+                text = "Notifications & Downloads",
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("New status notifications", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(
+                        "Manage whether Android allows OD Status Saver to send notifications. New-status alerts are not active yet.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            context.startActivity(
+                                Intent(AndroidSettings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                    .putExtra(AndroidSettings.EXTRA_APP_PACKAGE, context.packageName)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Open notification settings", fontSize = 12.sp)
+                    }
+                    androidx.compose.material3.HorizontalDivider()
+                    Text("Auto-download statuses", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(
+                        "Automatic background downloads are not available yet. Your manual save and bulk-save features remain unchanged.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Text(
+                text = "About",
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("OD Status Saver", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text("Version ${BuildConfig.VERSION_NAME}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
