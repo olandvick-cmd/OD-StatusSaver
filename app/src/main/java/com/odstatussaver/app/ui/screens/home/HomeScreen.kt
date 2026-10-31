@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -52,7 +52,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun HomeScreen(
     viewModel: StatusViewModel,
     onStatusClick: (StatusItem) -> Unit,
-    onSettingsClick: () -> Unit
+    onMoreClick: () -> Unit
 ) {
     val context = LocalContext.current
     val selectedTab by viewModel.selectedTab.collectAsState()
@@ -95,8 +95,8 @@ fun HomeScreen(
                     IconButton(onClick = { viewModel.refresh() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh statuses")
                     }
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    IconButton(onClick = onMoreClick) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More options")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
