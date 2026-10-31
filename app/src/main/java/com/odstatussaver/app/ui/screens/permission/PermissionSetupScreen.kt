@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -194,7 +193,7 @@ fun PermissionSetupScreen(
         val requiredFoldersGranted = whatsappGranted && businessGranted
         Button(
             onClick = onSetupComplete,
-            enabled = requiredFoldersGranted,
+            enabled = requiredFoldersGranted && (notificationsGranted || notificationSkipped || Build.VERSION.SDK_INT < 33),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Continue to OD Status Saver")
