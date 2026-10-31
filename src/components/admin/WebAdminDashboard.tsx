@@ -38,7 +38,6 @@ import {
   fetchAdMobMetrics, 
   fetchAdminsList, 
   fetchAuditLogs,
-  seedInitialAdminDataIfEmpty,
   DEFAULT_APP_CONFIG
 } from '../../services/adminService';
 import { 
@@ -71,7 +70,6 @@ export const WebAdminDashboard: React.FC = () => {
     isOwner, 
     isAdmin, 
     isAnalyst,
-    isSimulatedSession 
   } = useAdminAuth();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('OVERVIEW');
@@ -83,7 +81,6 @@ export const WebAdminDashboard: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
-  const [seedSuccessNotice, setSeedSuccessNotice] = useState<boolean>(false);
 
   const loadAllData = async () => {
     setIsLoading(true);
@@ -116,18 +113,7 @@ export const WebAdminDashboard: React.FC = () => {
     }
   }, [adminProfile]);
 
-  const handleSeedData = async () => {
-    if (!adminProfile) return;
-    setIsLoading(true);
-    const success = await seedInitialAdminDataIfEmpty(adminProfile.uid, adminProfile.email);
-    if (success) {
-      setSeedSuccessNotice(true);
-      await loadAllData();
-      setTimeout(() => setSeedSuccessNotice(false), 4000);
-    } else {
-      setIsLoading(false);
-    }
-  };
+
 
   // If auth is loading, render clean spinner
   if (authLoading) {
@@ -164,11 +150,6 @@ export const WebAdminDashboard: React.FC = () => {
               }`}>
                 Role: {role?.toUpperCase()}
               </span>
-              {isSimulatedSession && (
-                <span className="text-[10px] font-mono bg-amber-950 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
-                  Dev RBAC Preview Mode
-                </span>
-              )}
             </div>
 
             <div className="flex items-center gap-3 text-xs text-slate-400 mt-1 flex-wrap font-mono">
@@ -181,15 +162,7 @@ export const WebAdminDashboard: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 self-start lg:self-center flex-wrap">
-          {analytics.length === 0 && (
-            <button
-              onClick={handleSeedData}
-              disabled={isLoading}
-              className="px-3 py-1.5 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <span>Seed Initial Schema Data</span>
-            </button>
-          )}
+
 
           <button
             onClick={() => setShowExportModal(true)}
@@ -209,12 +182,7 @@ export const WebAdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {seedSuccessNotice && (
-        <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2.5">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>Initial metrics and configuration successfully synchronized into Firestore!</span>
-        </div>
-      )}
+
 
       {/* Navigation Sub-Tabs */}
       <div className="flex items-center gap-1 bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto text-xs font-semibold">
