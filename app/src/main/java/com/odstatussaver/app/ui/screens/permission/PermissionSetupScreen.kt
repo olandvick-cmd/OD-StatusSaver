@@ -29,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +61,7 @@ fun PermissionSetupScreen(
     val scope = rememberCoroutineScope()
 
     var checking by remember { mutableStateOf(true) }
+    var checkError by remember { mutableStateOf<String?>(null) }
     var whatsappInstalled by remember { mutableStateOf(false) }
     var businessInstalled by remember { mutableStateOf(false) }
     var whatsappGranted by remember { mutableStateOf(false) }
@@ -76,17 +78,24 @@ fun PermissionSetupScreen(
     }
 
     suspend fun refreshPermissionState() {
-        whatsappInstalled = repository.isPackageInstalled(WhatsAppSource.STANDARD)
-        businessInstalled = repository.isPackageInstalled(WhatsAppSource.BUSINESS)
-        whatsappGranted = !whatsappInstalled || repository.hasPermission(WhatsAppSource.STANDARD)
-        businessGranted = !businessInstalled || repository.hasPermission(WhatsAppSource.BUSINESS)
-        notificationsGranted = isNotificationPermissionGranted()
-        notificationSkipped = prefStore.isNotificationPromptDismissed()
-        checking = false
-        if (whatsappGranted && businessGranted &&
-            (notificationsGranted || notificationSkipped || Build.VERSION.SDK_INT < 33)
-        ) {
-            onSetupComplete()
+        checking = true
+        checkError = null
+        try {
+            whatsappInstalled = repository.isPackageInstalled(WhatsAppSource.STANDARD)
+            businessInstalled = repository.isPackageInstalled(WhatsAppSource.BUSINESS)
+            whatsappGranted = !whatsappInstalled || repository.hasPermission(WhatsAppSource.STANDARD)
+            businessGranted = !businessInstalled || repository.hasPermission(WhatsAppSource.BUSINESS)
+            notificationsGranted = isNotificationPermissionGranted()
+            notificationSkipped = prefStore.isNotificationPromptDismissed()
+            if (whatsappGranted && businessGranted &&
+                (notificationsGranted || notificationSkipped || Build.VERSION.SDK_INT < 33)
+            ) {
+                onSetupComplete()
+            }
+        } catch (error: Exception) {
+            checkError = "We couldn't check your setup. Your saved folder permissions and statuses have not been cleared. Please try again."
+        } finally {
+            checking = false
         }
     }
 
@@ -99,9 +108,13 @@ fun PermissionSetupScreen(
     ) { granted ->
         notificationsGranted = granted && isNotificationPermissionGranted()
         scope.launch {
-            prefStore.setNotificationPromptDismissed(!notificationsGranted)
-            notificationSkipped = !notificationsGranted
-            if (whatsappGranted && businessGranted) onSetupComplete()
+            try {
+                prefStore.setNotificationPromptDismissed(!notificationsGranted)
+                notificationSkipped = !notificationsGranted
+                if (whatsappGranted && businessGranted) onSetupComplete()
+            } catch (error: Exception) {
+                checkError = "Your notification choice couldn't be saved. Please try again."
+            }
         }
     }
 
@@ -113,8 +126,13 @@ fun PermissionSetupScreen(
                 val source = pendingSource ?: return@SafGuideDialog
                 pendingSource = null
                 scope.launch {
-                    repository.saveGrantedTreeUri(source, uri)
-                    refreshPermissionState()
+                    try {
+                        repository.saveGrantedTreeUri(source, uri)
+                        refreshPermissionState()
+                    } catch (error: Exception) {
+                        checking = false
+                        checkError = "Folder access couldn't be saved. Please try granting access again. Existing saved data was left unchanged."
+                    }
                 }
             }
         )
@@ -129,6 +147,27 @@ fun PermissionSetupScreen(
             CircularProgressIndicator()
             Spacer(Modifier.height(12.dp))
             Text("Preparing your app…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        return
+    }
+
+    if (checkError != null) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            IconHeader()
+            Text("Setup needs another try", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
+            Text(checkError!!, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(20.dp))
+            Button(onClick = { scope.launch { refreshPermissionState() } }, modifier = Modifier.fillMaxWidth()) {
+                Text("Try again")
+            }
+            TextButton(onClick = { checkError = null; checking = false }, modifier = Modifier.fillMaxWidth()) {
+                Text("Back to setup")
+            }
         }
         return
     }
