@@ -242,6 +242,155 @@
         }
       },
       "required": ["date", "impressions", "estimatedEarnings"]
+    },
+    "TelemetryEvent": {
+      "title": "Live Telemetry Event",
+      "description": "Sanitized real-time app_open or crash_reported telemetry event without PII",
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "type": "string",
+          "enum": ["app_open", "crash_reported"],
+          "description": "Controlled telemetry event type"
+        },
+        "appVersion": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Client app version"
+        },
+        "androidVersion": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Android OS API level or version label"
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Origin such as android or admin_test"
+        },
+        "details": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Sanitized non-PII event summary"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when event was logged"
+        }
+      },
+      "required": ["eventType", "appVersion", "androidVersion", "source", "details", "createdAt"]
+    },
+    "AlertRule": {
+      "title": "Alert Threshold Configuration",
+      "description": "Configurable real-time notification thresholds for app_open and crash_reported events",
+      "type": "object",
+      "properties": {
+        "appOpenThreshold": {
+          "type": "number",
+          "description": "Number of new app_open events required to trigger an alert"
+        },
+        "crashReportedThreshold": {
+          "type": "number",
+          "description": "Number of new crash_reported events required to trigger an alert"
+        },
+        "windowMinutes": {
+          "type": "number",
+          "description": "Rolling time window in minutes"
+        },
+        "appOpenEnabled": {
+          "type": "boolean",
+          "description": "Whether app_open threshold alerts are enabled"
+        },
+        "crashReportedEnabled": {
+          "type": "boolean",
+          "description": "Whether crash_reported threshold alerts are enabled"
+        },
+        "soundEnabled": {
+          "type": "boolean",
+          "description": "Whether an audible chime plays on alert trigger"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Email of administrator updating rules"
+        }
+      },
+      "required": [
+        "appOpenThreshold",
+        "crashReportedThreshold",
+        "windowMinutes",
+        "appOpenEnabled",
+        "crashReportedEnabled",
+        "soundEnabled",
+        "updatedAt",
+        "updatedBy"
+      ]
+    },
+    "AdminNotification": {
+      "title": "Admin Threshold Alert Notification",
+      "description": "Persisted alert created when logged telemetry events reach configured thresholds",
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "type": "string",
+          "enum": ["app_open", "crash_reported"],
+          "description": "Event type that triggered the notification"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "critical"],
+          "description": "Notification severity tier"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Short alert headline"
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Descriptive alert summary"
+        },
+        "eventCount": {
+          "type": "number",
+          "description": "Number of events counted when triggered"
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Configured threshold that was met"
+        },
+        "acknowledged": {
+          "type": "boolean",
+          "description": "Whether an admin has acknowledged the alert"
+        },
+        "acknowledgedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Email of acknowledging administrator or empty string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when alert was triggered"
+        }
+      },
+      "required": [
+        "eventType",
+        "severity",
+        "title",
+        "message",
+        "eventCount",
+        "threshold",
+        "acknowledged",
+        "acknowledgedBy",
+        "createdAt"
+      ]
     }
   },
   "firestore": {
@@ -268,6 +417,18 @@
     "/admob_reports/{reportId}": {
       "schema": "AdMobReport",
       "description": "AdMob metrics and revenue estimates"
+    },
+    "/telemetry_events/{eventId}": {
+      "schema": "TelemetryEvent",
+      "description": "Live stream of app_open and crash_reported events"
+    },
+    "/alert_rules/{ruleId}": {
+      "schema": "AlertRule",
+      "description": "Real-time notification threshold configuration"
+    },
+    "/admin_notifications/{notificationId}": {
+      "schema": "AdminNotification",
+      "description": "Triggered real-time administrator alerts"
     }
   }
 }

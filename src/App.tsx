@@ -7,6 +7,7 @@ import {
 import { AndroidSimulator } from './components/AndroidSimulator';
 import { WebAdminDashboard } from './components/admin/WebAdminDashboard';
 import { AdminAuthProvider } from './context/AdminAuthContext';
+import { AlertNotificationProvider, useAlertNotifications } from './context/AlertNotificationContext';
 import { CodeExplorer } from './components/CodeExplorer';
 import { StorageMatrix } from './components/StorageMatrix';
 import { INITIAL_STATUSES, DEFAULT_CONFIG, SimulatedStatus, RemoteConfigSettings } from './data/mockAndroidData';
@@ -17,8 +18,8 @@ interface AnalyticsEventRecord {
   timestamp: number;
 }
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'SIMULATOR' | 'ADMIN' | 'CODE' | 'STORAGE'>('SIMULATOR');
+function AppContent() {
+  const [activeTab, setActiveTab] = useState<'ADMIN' | 'SIMULATOR' | 'CODE' | 'STORAGE'>('ADMIN');
   const [statuses, setStatuses] = useState<SimulatedStatus[]>(INITIAL_STATUSES);
   const [config, setConfig] = useState<RemoteConfigSettings>(DEFAULT_CONFIG);
   const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEventRecord[]>([
@@ -39,8 +40,16 @@ export default function App() {
     }
   ]);
 
+  const { unreadCount, dispatchTelemetryEvent } = useAlertNotifications();
+
   const handleTrackEvent = (name: string, params: Record<string, any>) => {
     setAnalyticsEvents(prev => [...prev, { name, params, timestamp: Date.now() }]);
+    if (name === 'app_open' || name === 'crash_reported') {
+      dispatchTelemetryEvent(name, {
+        source: 'android_simulator',
+        details: typeof params?.details === 'string' ? params.details : `Simulator event: ${name}`
+      }).catch(() => {});
+    }
   };
 
   const handleSaveStatus = (id: string) => {
@@ -63,8 +72,9 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-extrabold text-base tracking-tight text-white">OD Status Saver</h1>
-                <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  Firebase Analytics & Crashlytics Active
+                <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Admin Console Live
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -76,8 +86,30 @@ export default function App() {
           {/* Navigation Pill */}
           <nav className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
             <button
+              onClick={() => setActiveTab('ADMIN')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
+                activeTab === 'ADMIN'
+                  ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <Sliders className="w-4 h-4" />
+              <span>Web Admin Console</span>
+              {unreadCount > 0 ? (
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold bg-rose-500 text-white animate-pulse">
+                  {unreadCount} ALERT{unreadCount > 1 ? 'S' : ''}
+                </span>
+              ) : (
+                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  activeTab === 'ADMIN' ? 'bg-slate-950 text-emerald-300' : 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'
+                }`}>
+                  LIVE
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab('SIMULATOR')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
                 activeTab === 'SIMULATOR'
                   ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -87,19 +119,8 @@ export default function App() {
               <span>Live App Simulation</span>
             </button>
             <button
-              onClick={() => setActiveTab('ADMIN')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
-                activeTab === 'ADMIN'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-              }`}
-            >
-              <Sliders className="w-4 h-4" />
-              <span>Web Admin Console</span>
-            </button>
-            <button
               onClick={() => setActiveTab('CODE')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
                 activeTab === 'CODE'
                   ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -110,7 +131,7 @@ export default function App() {
             </button>
             <button
               onClick={() => setActiveTab('STORAGE')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
                 activeTab === 'STORAGE'
                   ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -210,9 +231,7 @@ export default function App() {
         )}
 
         {activeTab === 'ADMIN' && (
-          <AdminAuthProvider>
-            <WebAdminDashboard />
-          </AdminAuthProvider>
+          <WebAdminDashboard />
         )}
 
         {activeTab === 'CODE' && (
@@ -229,5 +248,15 @@ export default function App() {
         OD Status Saver • Firebase BoM 33.5.1 • Analytics & Crashlytics • Kotlin 2.0.21 • Jetpack Compose
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AdminAuthProvider>
+      <AlertNotificationProvider>
+        <AppContent />
+      </AlertNotificationProvider>
+    </AdminAuthProvider>
   );
 }

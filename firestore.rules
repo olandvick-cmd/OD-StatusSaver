@@ -18,7 +18,10 @@ service cloud.firestore {
     }
 
     function isBootstrappedOwner() {
-      return isEmailVerified() && request.auth.token.email == 'Olandvick@gmail.com';
+      return isEmailVerified() && (
+        request.auth.token.email == 'Olandvick@gmail.com' ||
+        request.auth.token.email == 'olandvick@gmail.com'
+      );
     }
 
     function isAdminRecordExists(uid) {
@@ -55,6 +58,11 @@ service cloud.firestore {
 
     function isValidId(id) {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Test connection probe
+    match /test/{testId} {
+      allow read: if true;
     }
 
     // Admins Collection: Controls access to the dashboard
@@ -124,6 +132,98 @@ service cloud.firestore {
       allow get, list: if isAnalyst();
       allow create, update: if isValidId(reportId) && isAdmin();
       allow delete: if isValidId(reportId) && isOwner();
+    }
+
+    // Validation helpers for Real-Time Telemetry & Alerting
+    function isValidTelemetryEvent(data) {
+      return data.keys().hasAll(['eventType', 'appVersion', 'androidVersion', 'source', 'details', 'createdAt']) &&
+        data.keys().hasOnly(['eventType', 'appVersion', 'androidVersion', 'source', 'details', 'createdAt']) &&
+        data.eventType in ['app_open', 'crash_reported'] &&
+        data.appVersion is string && data.appVersion.size() > 0 && data.appVersion.size() <= 20 &&
+        data.androidVersion is string && data.androidVersion.size() > 0 && data.androidVersion.size() <= 40 &&
+        data.source is string && data.source.size() > 0 && data.source.size() <= 32 &&
+        data.details is string && data.details.size() <= 300 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidAlertRule(data) {
+      return data.keys().hasAll([
+          'appOpenThreshold', 'crashReportedThreshold', 'windowMinutes',
+          'appOpenEnabled', 'crashReportedEnabled', 'soundEnabled',
+          'updatedAt', 'updatedBy'
+        ]) &&
+        data.keys().hasOnly([
+          'appOpenThreshold', 'crashReportedThreshold', 'windowMinutes',
+          'appOpenEnabled', 'crashReportedEnabled', 'soundEnabled',
+          'updatedAt', 'updatedBy'
+        ]) &&
+        data.appOpenThreshold is number && data.appOpenThreshold >= 1 && data.appOpenThreshold <= 10000 &&
+        data.crashReportedThreshold is number && data.crashReportedThreshold >= 1 && data.crashReportedThreshold <= 1000 &&
+        data.windowMinutes is number && data.windowMinutes >= 1 && data.windowMinutes <= 1440 &&
+        data.appOpenEnabled is bool &&
+        data.crashReportedEnabled is bool &&
+        data.soundEnabled is bool &&
+        data.updatedAt is timestamp &&
+        data.updatedBy is string && data.updatedBy.size() > 0 && data.updatedBy.size() <= 128;
+    }
+
+    function isValidAdminNotification(data) {
+      return data.keys().hasAll([
+          'eventType', 'severity', 'title', 'message',
+          'eventCount', 'threshold', 'acknowledged', 'acknowledgedBy', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'eventType', 'severity', 'title', 'message',
+          'eventCount', 'threshold', 'acknowledged', 'acknowledgedBy', 'createdAt'
+        ]) &&
+        data.eventType in ['app_open', 'crash_reported'] &&
+        data.severity in ['info', 'warning', 'critical'] &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+        data.message is string && data.message.size() > 0 && data.message.size() <= 400 &&
+        data.eventCount is number && data.eventCount >= 1 && data.eventCount <= 100000 &&
+        data.threshold is number && data.threshold >= 1 && data.threshold <= 100000 &&
+        data.acknowledged is bool &&
+        data.acknowledgedBy is string && data.acknowledgedBy.size() <= 128 &&
+        data.createdAt is timestamp;
+    }
+
+    // Live Telemetry Events: Sanitized app_open & crash_reported stream
+    match /telemetry_events/{eventId} {
+      allow get, list: if isEmailVerified() && isAnalyst();
+      allow create: if isValidId(eventId) && isEmailVerified() && isAdmin() &&
+        isValidTelemetryEvent(request.resource.data) &&
+        request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(eventId) && isEmailVerified() && isOwner();
+    }
+
+    // Alert Rules: Threshold configuration for real-time notifications
+    match /alert_rules/{ruleId} {
+      allow get, list: if isEmailVerified() && isAnalyst();
+      allow create: if isValidId(ruleId) && isEmailVerified() && isAdmin() &&
+        isValidAlertRule(request.resource.data) &&
+        request.resource.data.updatedAt == request.time;
+      allow update: if isValidId(ruleId) && isEmailVerified() && isAdmin() &&
+        isValidAlertRule(request.resource.data) &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if isValidId(ruleId) && isEmailVerified() && isOwner();
+    }
+
+    // Admin Notifications: Persisted alerts triggered by telemetry thresholds
+    match /admin_notifications/{notificationId} {
+      allow get, list: if isEmailVerified() && isAnalyst();
+      allow create: if isValidId(notificationId) && isEmailVerified() && isAnalyst() &&
+        isValidAdminNotification(request.resource.data) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.acknowledged == false &&
+        request.resource.data.acknowledgedBy == '';
+      allow update: if isValidId(notificationId) && isEmailVerified() && isAnalyst() &&
+        isValidAdminNotification(request.resource.data) &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acknowledged', 'acknowledgedBy']) &&
+        request.resource.data.acknowledged == true &&
+        request.resource.data.acknowledgedBy.size() > 0;
+      allow delete: if isValidId(notificationId) && isEmailVerified() && isOwner();
     }
   }
 }

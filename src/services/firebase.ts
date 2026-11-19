@@ -185,4 +185,42 @@ export interface AdMobMetricDoc {
   adFormat: string;
 }
 
+export type TelemetryEventType = 'app_open' | 'crash_reported';
+
+export interface TelemetryEventDoc {
+  id: string;
+  eventType: TelemetryEventType;
+  appVersion: string;
+  androidVersion: string;
+  source: string;
+  details: string;
+  createdAtMs: number;
+}
+
+export interface AlertRuleConfig {
+  appOpenThreshold: number;
+  crashReportedThreshold: number;
+  windowMinutes: number;
+  appOpenEnabled: boolean;
+  crashReportedEnabled: boolean;
+  soundEnabled: boolean;
+  updatedAtMs?: number;
+  updatedBy: string;
+}
+
+export type AlertSeverity = 'info' | 'warning' | 'critical';
+
+export interface AdminNotificationDoc {
+  id: string;
+  eventType: TelemetryEventType;
+  severity: AlertSeverity;
+  title: string;
+  message: string;
+  eventCount: number;
+  threshold: number;
+  acknowledged: boolean;
+  acknowledgedBy: string;
+  createdAtMs: number;
+}
+
 export const OWNER_BOOTSTRAP_EMAIL = 'Olandvick@gmail.com';

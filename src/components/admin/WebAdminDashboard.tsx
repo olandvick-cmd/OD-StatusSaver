@@ -4,6 +4,7 @@ import {
   Activity, 
   DollarSign, 
   Bell, 
+  BellRing,
   Sliders, 
   Users, 
   FileText, 
@@ -21,6 +22,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useAlertNotifications } from '../../context/AlertNotificationContext';
 import { AdminLoginView } from './AdminLoginView';
 import { OverviewSection } from './OverviewSection';
 import { UsageAnalyticsSection } from './UsageAnalyticsSection';
@@ -31,6 +33,8 @@ import { AdSettingsSection } from './AdSettingsSection';
 import { TeamManagementSection } from './TeamManagementSection';
 import { AuditLogsSection } from './AuditLogsSection';
 import { ExportCsvModal } from './ExportCsvModal';
+import { NotificationBellButton, AlertToastStack } from './RealtimeAlertsCenter';
+import { RealtimeAlertsSection } from './RealtimeAlertsSection';
 import { 
   fetchAppConfig, 
   fetchDailyAnalytics, 
@@ -52,6 +56,7 @@ import firebaseConfig from '../../../firebase-applet-config.json';
 
 type AdminTab = 
   | 'OVERVIEW' 
+  | 'ALERTS'
   | 'USAGE' 
   | 'CRASHLYTICS' 
   | 'ADMOB' 
@@ -71,6 +76,7 @@ export const WebAdminDashboard: React.FC = () => {
     isAdmin, 
     isAnalyst,
   } = useAdminAuth();
+  const { unreadCount } = useAlertNotifications();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('OVERVIEW');
   const [config, setConfig] = useState<AppConfigDoc>(DEFAULT_APP_CONFIG);
@@ -160,6 +166,8 @@ export const WebAdminDashboard: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 self-start lg:self-center flex-wrap">
+          <NotificationBellButton onOpenAlertsTab={() => setActiveTab('ALERTS')} />
+
           <button
             onClick={() => setShowExportModal(true)}
             className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
@@ -190,6 +198,27 @@ export const WebAdminDashboard: React.FC = () => {
         >
           <BarChart3 className="w-4 h-4" />
           <span>Overview</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('ALERTS')}
+          className={`px-3.5 py-2 rounded-xl flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
+            activeTab === 'ALERTS'
+              ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+          }`}
+        >
+          <BellRing className={`w-4 h-4 ${unreadCount > 0 && activeTab !== 'ALERTS' ? 'text-rose-400 animate-pulse' : ''}`} />
+          <span>Real-Time Alerts</span>
+          {unreadCount > 0 && (
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black leading-none ${
+              activeTab === 'ALERTS'
+                ? 'bg-slate-950 text-emerald-300'
+                : 'bg-rose-500 text-white'
+            }`}>
+              {unreadCount}
+            </span>
+          )}
         </button>
 
         <button
@@ -287,6 +316,10 @@ export const WebAdminDashboard: React.FC = () => {
           />
         )}
 
+        {activeTab === 'ALERTS' && (
+          <RealtimeAlertsSection />
+        )}
+
         {activeTab === 'USAGE' && (
           <UsageAnalyticsSection analytics={analytics} />
         )}
@@ -326,6 +359,9 @@ export const WebAdminDashboard: React.FC = () => {
         onClose={() => setShowExportModal(false)}
         analytics={analytics}
       />
+
+      {/* Real-Time Alert Toasts */}
+      <AlertToastStack onInspectAlerts={() => setActiveTab('ALERTS')} />
     </div>
   );
 };
