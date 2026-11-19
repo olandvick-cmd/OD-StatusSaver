@@ -31,6 +31,8 @@ abstract class BaseStatusMediaSource(
             true
         } catch (e: PackageManager.NameNotFoundException) {
             false
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -51,12 +53,12 @@ abstract class BaseStatusMediaSource(
     }
 
     override suspend fun hasSafPermission(): Boolean {
-        val uri = getPersistedTreeUri() ?: return false
         return try {
+            val uri = getPersistedTreeUri() ?: return false
             val doc = DocumentFile.fromTreeUri(context, uri)
             doc != null && doc.exists() && doc.canRead()
         } catch (e: SecurityException) {
-            clearPersistedTreeUri()
+            runCatching { clearPersistedTreeUri() }
             false
         } catch (e: Exception) {
             false
